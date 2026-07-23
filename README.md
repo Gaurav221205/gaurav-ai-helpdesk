@@ -1,1 +1,1 @@
-Deployed link:-teamai1.netlify.app
+Deployed link:-https://teamai1.netlify.app/
