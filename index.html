@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Gaurav AI — Support Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#201c16; --paper:#f7f2e7; --paper-raised:#fffdf7; --line:#ddd2b8;
+    --navy:#22344a; --navy-soft:#5b7089;
+    --amber:#bd7a2a; --amber-soft:#f3e2bd; --amber-deep:#8f5c1c;
+    --ok:#3f7d5c; --danger:#a3402f;
+    --mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    --serif: 'Fraunces', Georgia, 'Iowan Old Style', serif;
+    --shadow: 0 1px 2px rgba(32,28,22,.04), 0 4px 14px rgba(32,28,22,.06);
+  }
+  *{box-sizing:border-box;}
+  ::selection{background:var(--amber-soft); color:var(--ink);}
+  body{
+    margin:0; font-family:var(--mono); color:var(--ink);
+    height:100vh; display:flex; flex-direction:column;
+    background:
+      radial-gradient(1200px 500px at 100% -10%, rgba(189,122,42,.05), transparent),
+      var(--paper);
+  }
+  header{
+    padding:18px 26px 16px; border-bottom:2px solid var(--ink); display:flex; align-items:baseline; gap:14px;
+    background:var(--paper-raised);
+  }
+  header .brand{display:flex; align-items:baseline; gap:10px;}
+  header h1{
+    font-family:var(--serif); font-weight:600; font-style:italic; font-size:24px; margin:0;
+    letter-spacing:.2px; color:var(--ink);
+  }
+  header .mark{
+    width:26px; height:26px; border-radius:50%; background:var(--navy); color:var(--paper-raised);
+    font-family:var(--serif); font-weight:600; font-size:13px; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  header .tag{
+    font-size:10.5px; color:var(--navy-soft); border:1px solid var(--line); padding:3px 9px;
+    border-radius:20px; text-transform:uppercase; letter-spacing:.6px; background:var(--paper);
+  }
+  header .spacer{flex:1;}
+  header .edition{font-size:11px; color:var(--navy-soft); letter-spacing:.3px;}
+  .layout{flex:1; display:flex; min-height:0;}
+  .side{
+    width:240px; border-right:2px solid var(--ink); padding:20px 18px; font-size:12px; overflow-y:auto;
+    background:var(--paper-raised);
+  }
+  .side h2{font-size:10.5px; text-transform:uppercase; letter-spacing:1.2px; color:var(--navy-soft); margin:0 0 10px; font-weight:600;}
+  .metric{display:flex; justify-content:space-between; align-items:baseline; padding:6px 0; border-bottom:1px dashed var(--line);}
+  .metric span{color:var(--navy-soft);}
+  .metric b{font-size:15px; font-family:var(--serif); font-weight:600;}
+  .cat-row{display:flex; justify-content:space-between; padding:3px 0; font-size:11.5px;}
+  .cat-bar{height:5px; background:var(--line); border-radius:20px; overflow:hidden; margin:3px 0 8px;}
+  .cat-fill{height:100%; background:var(--navy); border-radius:20px; transition:width .4s ease;}
+  .key-box{margin-top:20px; padding-top:16px; border-top:2px solid var(--ink);}
+  .key-status{
+    font-size:11px; color:var(--ok); background:var(--amber-soft); border:1px solid var(--amber);
+    padding:8px 10px; border-radius:4px; line-height:1.4;
+  }
+  .main{flex:1; display:flex; flex-direction:column; min-width:0;}
+  .thread{flex:1; overflow-y:auto; padding:24px 28px;}
+  .thread::-webkit-scrollbar{width:10px;}
+  .thread::-webkit-scrollbar-thumb{background:var(--line); border-radius:20px; border:2px solid var(--paper);}
+  .msg{
+    max-width:76%; margin-bottom:16px; padding:12px 15px; border-radius:6px; font-size:13.5px;
+    line-height:1.55; white-space:pre-wrap; box-shadow:var(--shadow);
+  }
+  .msg.user{margin-left:auto; background:var(--navy); color:#fdfbf6; border-radius:8px 8px 2px 8px;}
+  .msg.bot{background:var(--paper-raised); border:1px solid var(--line); border-radius:8px 8px 8px 2px;}
+  .msg.escalation{background:var(--amber-soft); border:1px solid var(--amber); color:var(--ink); border-radius:8px;}
+  .msg.system{max-width:100%; text-align:center; color:var(--navy-soft); font-size:11px; background:none; box-shadow:none; margin:8px 0;}
+  .tagline{font-size:10px; text-transform:uppercase; letter-spacing:.7px; opacity:.6; margin-bottom:5px; font-weight:600;}
+  form{display:flex; gap:10px; padding:16px 22px; border-top:2px solid var(--ink); background:var(--paper-raised);}
+  textarea{
+    flex:1; resize:none; font-family:var(--mono); font-size:13.5px; padding:11px 13px;
+    border:1px solid var(--line); border-radius:6px; height:46px; background:var(--paper);
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  textarea:focus{outline:none; border-color:var(--navy-soft); box-shadow:0 0 0 3px rgba(34,52,74,.1);}
+  button{
+    font-family:var(--mono); font-weight:600; background:var(--ink); color:#fdfbf6; border:none;
+    padding:0 22px; cursor:pointer; letter-spacing:.4px; border-radius:6px; transition:background .15s ease, transform .1s ease;
+  }
+  button:hover:not(:disabled){background:var(--amber-deep);}
+  button:active:not(:disabled){transform:scale(.97);}
+  button:disabled{opacity:.4; cursor:default;}
+  button:focus-visible, textarea:focus-visible{outline:2px solid var(--navy-soft); outline-offset:2px;}
+  .quick{display:flex; gap:7px; flex-wrap:wrap; padding:0 22px 12px;}
+  .quick button{
+    background:var(--paper-raised); color:var(--ink); border:1px solid var(--line); font-weight:normal;
+    font-size:11px; padding:6px 12px; border-radius:20px;
+  }
+  .quick button:hover{background:var(--amber-soft); border-color:var(--amber); color:var(--ink);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="mark">G</span>
+    <h1>Gaurav AI</h1>
+  </div>
+  <span class="tag">multi-prompt support assistant · demo</span>
+  <span class="spacer"></span>
+  <span class="edition">Ledgerly Support Desk</span>
+</header>
+
+<div class="layout">
+  <div class="side">
+    <h2>Session metrics</h2>
+    <div class="metric"><span>Messages handled</span><b id="mCount">0</b></div>
+    <div class="metric"><span>Avg. response time</span><b id="mTime">–</b></div>
+    <div class="metric"><span>Escalations</span><b id="mEsc">0</b></div>
+
+    <h2 style="margin-top:16px;">Scenario mix</h2>
+    <div id="catList"></div>
+
+    <div class="key-box">
+      <h2>Groq API</h2>
+      <div class="key-status" id="keyStatus">Connected — using Groq (Llama 3.3 70B) for all responses.</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="thread" id="thread"></div>
+    <div class="quick" id="quick"></div>
+    <form id="form">
+      <textarea id="input" placeholder="Type a customer message… (Shift+Enter for newline)"></textarea>
+      <button id="send" type="submit">Send</button>
+    </form>
+  </div>
+</div>
+
+<script>
+/* ---------------------------------------------------------------
+   PROJECT 2 — Customer Support Assistant
+   Techniques demonstrated:
+   1. Multi-scenario prompting  (5 specialized system prompts)
+   2. Few-shot examples embedded per scenario
+   3. Prompt chaining for escalation (2nd model call re-frames a
+      failed/negative interaction into a human-handoff summary)
+   4. Logged evaluation metrics (latency, category mix, escalation rate)
+------------------------------------------------------------------*/
+
+const MODEL = "llama-3.3-70b-versatile";
+const GROQ_API_KEY = "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";
+
+// ---------- Scenario definitions: system prompt + few-shot examples ----------
+const SCENARIOS = {
+  billing: {
+    label: "Billing",
+    keywords: ["charge","invoice","refund","payment","subscription","bill","price","card declined","overcharged"],
+    system: `You are a billing support specialist for a SaaS product called "Ledgerly".
+Be precise about money: never invent amounts, dates, or policy you were not given.
+If the customer needs an actual refund processed or account-specific charge details, say you will prepare a summary for a human billing agent rather than guessing.
+Tone: calm, precise, reassuring. Keep replies under 120 words.
+
+Example 1
+Customer: I was charged twice this month, what's going on?
+Agent: I'm sorry about the duplicate charge — that's frustrating. I can't pull your exact transaction log from here, but double charges are usually a failed-then-retried payment. I'll flag this for our billing team to verify and refund any duplicate within 3-5 business days. Can you confirm the last 4 digits of the card so they can match the charge?
+
+Example 2
+Customer: Can I get a refund for the annual plan I bought yesterday?
+Agent: Yes — purchases within the last 14 days qualify for a full refund under our standard policy. I'll submit the refund request now; you should see it back on your original payment method in 5-7 business days. Anything else I can help with?`
+  },
+  technical: {
+    label: "Technical",
+    keywords: ["bug","error","crash","not working","broken","login","password","reset","sync","502","500","loading"],
+    system: `You are a technical support specialist for "Ledgerly".
+Ask at most one clarifying question if truly needed, otherwise give the most likely fix first.
+Never invent internal system names, log contents, or specific error codes that weren't provided.
+Tone: friendly, competent, concrete. Keep replies under 120 words.
+
+Example 1
+Customer: The app keeps crashing when I open reports.
+Agent: Thanks for flagging that. First thing to try: fully close the app (not just minimize) and reopen it — that resolves most report-crash cases caused by a stale cache. If it still crashes, could you tell me what device and app version you're on? That'll help me narrow it down further.
+
+Example 2
+Customer: I can't log in, it says invalid password but I know it's right.
+Agent: That's usually caused by a recent password change not syncing across devices yet, or caps lock being on. Try resetting your password from the "Forgot password" link — it takes under a minute and immediately clears any stale session. Let me know if the reset email doesn't arrive within a few minutes.`
+  },
+  account: {
+    label: "Account",
+    keywords: ["cancel","delete account","upgrade","downgrade","change plan","team member","seat","access"],
+    system: `You are an account management specialist for "Ledgerly".
+Handle plan changes, cancellations, and access questions. Be transparent about tradeoffs (e.g. losing data on downgrade) without being pushy about retention.
+Tone: respectful of the customer's autonomy, no guilt-tripping. Keep replies under 120 words.
+
+Example 1
+Customer: I want to cancel my subscription.
+Agent: Understood — I can process that. Your access will continue until the end of the current billing period, and you won't be charged again. If you don't mind sharing, was there something specific that didn't work for you? Either way, I'll get the cancellation started now.
+
+Example 2
+Customer: How do I add a teammate to my workspace?
+Agent: Go to Settings → Team → Invite, and enter their email — they'll get an invite link valid for 7 days. Note that adding seats beyond your plan's limit will prompt an upgrade. Want me to walk through plan limits?`
+  },
+  complaint: {
+    label: "Complaint",
+    keywords: ["angry","frustrated","unacceptable","terrible","worst","furious","complain","disappointed","ridiculous","never again"],
+    system: `You are a de-escalation specialist for "Ledgerly" handling an upset customer.
+Acknowledge the emotion genuinely and briefly before any problem-solving. Do not over-apologize repeatedly. Do not make promises about compensation or timelines you cannot verify.
+Tone: calm, validating, non-defensive. Keep replies under 100 words.
+
+Example 1
+Customer: This is the third time your app has lost my data. Absolutely unacceptable.
+Agent: Losing work three times is a real problem, not just an inconvenience — I understand the frustration. I want to get this fixed rather than just apologize. Can you tell me roughly when the last loss happened so I can flag the exact window to our engineering team?
+
+Example 2
+Customer: I've been on hold for an hour and no one has helped me.
+Agent: An hour is far too long to wait, and I'm sorry that happened. I'm here now and I'll stay with this until it's resolved — what's the issue you originally called about?`
+  },
+  general: {
+    label: "General",
+    keywords: [],
+    system: `You are a friendly front-line support agent for "Ledgerly", a project-tracking SaaS product.
+For general questions (how-to, product info, small talk) answer directly and briefly.
+If the question is really billing, technical, account, or a complaint in disguise, still answer helpfully.
+Tone: warm, plain language, no corporate filler. Keep replies under 100 words.
+
+Example 1
+Customer: What does Ledgerly actually do?
+Agent: Ledgerly is a project tracker built for small teams — boards, deadlines, and lightweight reporting, without the bloat of bigger tools like Jira. Most teams use it to replace a messy spreadsheet. Want a quick rundown of the main features?
+
+Example 2
+Customer: Do you have a mobile app?
+Agent: Yes — iOS and Android, both free with any paid web plan. It mirrors your boards and sends deadline reminders. Anything specific you want it to handle on mobile?`
+  }
+};
+
+const ESCALATION_TRIGGERS = ["angry","furious","frustrated","unacceptable","terrible","worst","cancel my account",
+  "speak to a human","speak to a manager","supervisor","lawsuit","lawyer","never again","done with this","ridiculous","disappointed"];
+
+// ---------- Metrics ----------
+let stats = { count:0, totalMs:0, esc:0, cats:{billing:0, technical:0, account:0, complaint:0, general:0} };
+
+function classify(text){
+  const t = text.toLowerCase();
+  for (const key of ["billing","technical","account","complaint"]) {
+    if (SCENARIOS[key].keywords.some(k => t.includes(k))) return key;
+  }
+  return "general";
+}
+function shouldEscalate(userText, replyText){
+  const t = (userText + " " + replyText).toLowerCase();
+  return ESCALATION_TRIGGERS.some(k => t.includes(k));
+}
+
+// ---------- Groq call ----------
+async function callGroq(systemText, userText){
+  const res = await fetch(
+    "https://api.groq.com/openai/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${GROQ_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [
+          { role: "system", content: systemText },
+          { role: "user", content: userText }
+        ],
+        temperature: 0.6,
+        max_tokens: 300
+      })
+    }
+  );
+  if (!res.ok) {
+    const errBody = await res.text();
+    throw new Error(`API_ERROR: ${res.status} ${errBody.slice(0,200)}`);
+  }
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content?.trim() || "(no response text returned)";
+}
+
+// Escalation chain prompt: takes the ORIGINAL exchange and produces a human-handoff note
+const ESCALATION_SYSTEM = `You are writing an internal handoff note for a human support agent, based on a customer message that shows signs of frustration or an explicit request to escalate.
+Output exactly two short parts:
+1. A one-sentence empathetic message to show the customer, acknowledging escalation is happening.
+2. A 2-3 bullet internal summary (issue, sentiment, suggested priority: low/medium/high) for the human agent.
+Do not invent facts not present in the customer's message.`;
+
+// ---------- UI helpers ----------
+const thread = document.getElementById("thread");
+function addMsg(role, text, tagline){
+  const div = document.createElement("div");
+  div.className = "msg " + role;
+  if (tagline) {
+    const tl = document.createElement("div");
+    tl.className = "tagline";
+    tl.textContent = tagline;
+    div.appendChild(tl);
+  }
+  const body = document.createElement("div");
+  body.textContent = text;
+  div.appendChild(body);
+  thread.appendChild(div);
+  thread.scrollTop = thread.scrollHeight;
+  return div;
+}
+function addSystemNote(text){
+  const div = document.createElement("div");
+  div.className = "msg system";
+  div.textContent = text;
+  thread.appendChild(div);
+  thread.scrollTop = thread.scrollHeight;
+}
+
+function renderMetrics(){
+  document.getElementById("mCount").textContent = stats.count;
+  document.getElementById("mTime").textContent = stats.count ? Math.round(stats.totalMs/stats.count) + " ms" : "–";
+  document.getElementById("mEsc").textContent = stats.esc;
+  const catList = document.getElementById("catList");
+  catList.innerHTML = "";
+  const max = Math.max(1, ...Object.values(stats.cats));
+  for (const [key, val] of Object.entries(stats.cats)){
+    const row = document.createElement("div");
+    row.innerHTML = `<div class="cat-row"><span>${SCENARIOS[key].label}</span><span>${val}</span></div>
+      <div class="cat-bar"><div class="cat-fill" style="width:${(val/max)*100}%"></div></div>`;
+    catList.appendChild(row);
+  }
+}
+renderMetrics();
+
+// quick-fill demo buttons
+const demoMsgs = [
+  "I was charged twice for my subscription this month!",
+  "The app crashes every time I open the reports tab.",
+  "How do I invite a teammate to my workspace?",
+  "This is the third bug this week, absolutely ridiculous, I want to speak to a manager."
+];
+const quick = document.getElementById("quick");
+demoMsgs.forEach(m => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = m.length > 38 ? m.slice(0,38)+"…" : m;
+  b.onclick = () => { document.getElementById("input").value = m; };
+  quick.appendChild(b);
+});
+
+addSystemNote("Ready — powered by Groq. Try a quick example below or type your own.");
+
+// ---------- Main send flow ----------
+const form = document.getElementById("form");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("send");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const text = input.value.trim();
+  if (!text) return;
+  addMsg("user", text);
+  input.value = "";
+  sendBtn.disabled = true;
+
+  const category = classify(text);
+  const scenario = SCENARIOS[category];
+  const thinking = addMsg("bot", "…thinking (" + scenario.label + " prompt)", "Routing");
+
+  const t0 = performance.now();
+  try {
+    const reply = await callGroq(scenario.system, text);
+    const elapsed = Math.round(performance.now() - t0);
+    stats.count++; stats.totalMs += elapsed; stats.cats[category]++;
+    thinking.remove();
+    addMsg("bot", reply, scenario.label + " prompt · " + elapsed + " ms");
+
+    // ---- Prompt chaining: escalation check ----
+    if (shouldEscalate(text, reply)){
+      stats.esc++;
+      const escReply = await callGroq(ESCALATION_SYSTEM, `Customer message: "${text}"\nAgent's reply: "${reply}"`);
+      addMsg("escalation", escReply, "Escalation chain — human handoff triggered");
+    }
+    renderMetrics();
+  } catch (err){
+    thinking.remove();
+    addSystemNote("⚠ Request failed: " + err.message);
+  } finally {
+    sendBtn.disabled = false;
+  }
+});
+
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey){
+    e.preventDefault();
+    form.requestSubmit();
+  }
+});
+</script>
+</body>
+</html>
